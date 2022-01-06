@@ -7,6 +7,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.select import Select
+
 import traceback
 import time
 import xml.etree.ElementTree as ET
@@ -528,7 +530,7 @@ class Ui_MainWindow(object):
         self.colorCombo.setItemText(7, _translate("MainWindow", "Black"))
         self.colorCombo.setItemText(8, _translate("MainWindow", "White"))
         self.colorCombo.setItemText(9, _translate("MainWindow", "Tan"))
-        self.colorCombo.setItemText(10, _translate("MainWindow", "Olive"))
+        self.colorCombo.setItemText(10, _translate("MainWindow", "Olive Russian Camo"))
         self.colorCombo.setItemText(11, _translate("MainWindow", "Others"))
         self.catLabel.setText(_translate("MainWindow", "Category"))
         self.colorLab.setText(_translate("MainWindow", "Color"))
@@ -634,7 +636,7 @@ class Ui_MainWindow(object):
         self.startBut.setText(_translate("MainWindow", "START!!!"))
         self.readyBut.setText(_translate("MainWindow", "READY"))
         self.exitBut.setText(_translate("MainWindow", "EXIT"))
-        self.label_name.setText(_translate("MainWindow", "MAREY"))
+        self.label_name.setText(_translate("MainWindow", "BP-FK-G"))
 
     def initial(self, MainWindow):
         # load chrome
@@ -671,9 +673,19 @@ class Ui_MainWindow(object):
                 # Size selector
                 driver.implicitly_wait(1)
                 sizetext = self.tableWidget.item(i,1).text()
-                sizeXpath = "//*[@id='s']/option[. = '" + sizetext +  "']"
-                size = driver.find_element_by_xpath(sizeXpath)
-                size.click()
+                
+                # sizeXpath = "//*[@id='s']/option[. = '" + sizetext +  "']"
+                # print("DEBUG-" + sizeXpath)
+                # size = driver.find_element_by_xpath(sizeXpath)
+                # size.click()
+                
+                # Steven Code
+                sizeSelector = Select(driver.find_element(By.ID,"size"))
+                sizeSelector.select_by_visible_text(sizetext)
+                # driver.implicitly_wait(1)
+                time.sleep(3.5)
+                
+                # End of Steven Code
 
                 # Click add-to-cart button
                 addtocartBut = WebDriverWait(driver, 3).until(
@@ -699,29 +711,57 @@ class Ui_MainWindow(object):
             driver.find_element_by_id('order_billing_name').send_keys(self.nameLine.text())
             driver.find_element_by_id('order_email').send_keys(self.emailLine.text())
             driver.find_element_by_id('order_tel').send_keys(self.numberLine.text())
-            driver.find_element_by_id('bo').send_keys(self.addressLine.text())
-            driver.find_element_by_id('oba3').send_keys(self.aptLine.text())
+            driver.find_element_by_id('order_billing_address').send_keys(self.addressLine.text())
+            driver.find_element_by_id('order_billing_address_2').send_keys(self.aptLine.text())
             driver.find_element_by_id('order_billing_zip').send_keys(self.zipLine.text())
             driver.find_element_by_id('order_billing_city').send_keys(self.cityLine.text())
 
             driver.find_element_by_id('order_billing_state').send_keys(self.stateCbox.currentText())
             driver.find_element_by_id('order_billing_country').send_keys(self.countryCbox.currentText())
 
+
+            # driver.find_element(By.ID,"order_terms").click()
+
+
+
             # Credit Card info section
             tree = ET.parse('savedcinfo.xml')
             root = tree.getroot()
 
-            driver.find_element_by_id('rnsnckrn').send_keys(self.ccnLine.text())
-            driver.find_element_by_name('credit_card[month]').send_keys(self.expmCbox.currentText())
-            driver.find_element_by_name('credit_card[year]').send_keys(self.expyCbox.currentText())
-            driver.find_element_by_id('orcer').send_keys(self.cvvLine.text())
+
+
+            ## Steven Code
+            driver.find_element(By.ID,'credit_card_number').send_keys(self.ccnLine.text())
+
+            cardmonthSelector = Select(driver.find_element(By.ID,"credit_card_month"))
+            cardmonthSelector.select_by_value("07")            
+
+            cardyearSelector = Select(driver.find_element(By.ID,"credit_card_year"))
+            cardyearSelector.select_by_value("2023")
+            
+            driver.find_element(By.ID,"credit_card_verification_value").send_keys(self.cvvLine.text())
+            
+            # driver.find_element(By.ID,"order_terms").click()
+            ## End of Steven Code
+            
+            
+            # Original Code
+            # driver.find_element_by_name('credit_card[month]').send_keys(self.expmCbox.currentText())
+            # driver.find_element_by_name('credit_card[year]').send_keys(self.expyCbox.currentText())
+            # driver.find_element_by_id('orcer').send_keys(self.cvvLine.text())
+
+
 
             # Process save address and term&condition check box click
             for combo in driver.find_elements_by_css_selector('.iCheck-helper'):
                 combo.click()
 
+        
             # Click process payment
             driver.find_element_by_name('commit').click()
+            
+            
+            
         except(ValueError,TypeError,IndexError,NameError):
             msgBox = QMessageBox()
             msgBox.setText(traceback.format_exc())
